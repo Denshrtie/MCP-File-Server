@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-file-server"
+version = "0.1.0"
+description = "Sandboxed MCP file server for the CS 3A / CS 3B Elective midterm project"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp[cli]>=2.3.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
