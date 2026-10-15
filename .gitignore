@@ -3,3 +3,23 @@ __pycache__/
 *.pyc
 .pytest_cache/
 *.egg-info/
+# Temporary files and backups
+*.bak
+*.backup
+*.tmp
+*.validation-backup
+*.checkpoint-backup
+
+# Python test and build artifacts
+.coverage
+htmlcov/
+build/
+dist/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/

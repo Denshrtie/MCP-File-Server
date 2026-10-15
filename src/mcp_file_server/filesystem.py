@@ -2,7 +2,15 @@ from pathlib import Path
 import shutil
 import subprocess
 
+from pydantic import ValidationError
+
 from .security import SandboxViolation, resolve_safe_path
+from .validation import (
+    CheckpointInput,
+    FileContentInput,
+    SearchInput,
+    TextReplacementInput,
+)
 
 
 # create_text_file
@@ -13,6 +21,8 @@ def create_text_file(
     """Create a new UTF-8 text file inside the sandbox."""
 
     try:
+        validated = FileContentInput(path=path, content=content)
+        path, content = validated.path, validated.content
         target = resolve_safe_path(path)
 
         if target.exists():
@@ -29,6 +39,16 @@ def create_text_file(
             "success": True,
             "path": str(target),
             "message": "Text file created successfully.",
+        }
+
+    except ValidationError as exc:
+        return {
+            "success": False,
+            "error": "validation_error",
+            "message": "; ".join(
+                f"{'.'.join(str(part) for part in item['loc'])}: {item['msg']}"
+                for item in exc.errors()
+            ),
         }
 
     except SandboxViolation as exc:
@@ -176,6 +196,8 @@ def write_file(
     """Create or overwrite a UTF-8 text file inside the sandbox."""
 
     try:
+        validated = FileContentInput(path=path, content=content)
+        path, content = validated.path, validated.content
         target = resolve_safe_path(path)
 
         if target.exists() and not target.is_file():
@@ -192,6 +214,16 @@ def write_file(
             "success": True,
             "path": str(target),
             "message": "File written successfully.",
+        }
+
+    except ValidationError as exc:
+        return {
+            "success": False,
+            "error": "validation_error",
+            "message": "; ".join(
+                f"{'.'.join(str(part) for part in item['loc'])}: {item['msg']}"
+                for item in exc.errors()
+            ),
         }
 
     except SandboxViolation as exc:
@@ -218,6 +250,12 @@ def edit_file(
     """Replace one exact section of a UTF-8 text file."""
 
     try:
+        validated = TextReplacementInput(
+            path=path, old_text=old_text, new_text=new_text
+        )
+        path, old_text, new_text = (
+            validated.path, validated.old_text, validated.new_text
+        )
         target = resolve_safe_path(path)
 
         if not target.exists():
@@ -259,6 +297,16 @@ def edit_file(
             "success": True,
             "path": str(target),
             "message": "File edited successfully.",
+        }
+
+    except ValidationError as exc:
+        return {
+            "success": False,
+            "error": "validation_error",
+            "message": "; ".join(
+                f"{'.'.join(str(part) for part in item['loc'])}: {item['msg']}"
+                for item in exc.errors()
+            ),
         }
 
     except SandboxViolation as exc:
@@ -571,14 +619,9 @@ def search_files(
 ) -> dict:
     """Search UTF-8 text files recursively for a string."""
 
-    if not query:
-        return {
-            "success": False,
-            "error": "invalid_query",
-            "message": "Search query must not be empty.",
-        }
-
     try:
+        validated = SearchInput(query=query, path=path)
+        query, path = validated.query, validated.path
         root = resolve_safe_path(path)
 
         if not root.exists():
@@ -621,6 +664,16 @@ def search_files(
             "query": query,
             "count": len(matches),
             "matches": matches,
+        }
+
+    except ValidationError as exc:
+        return {
+            "success": False,
+            "error": "validation_error",
+            "message": "; ".join(
+                f"{'.'.join(str(part) for part in item['loc'])}: {item['msg']}"
+                for item in exc.errors()
+            ),
         }
 
     except SandboxViolation as exc:
@@ -780,14 +833,9 @@ def checkpoint(
 ) -> dict:
     """Append a timestamped checkpoint to CHECKPOINTS.md."""
 
-    if not message.strip():
-        return {
-            "success": False,
-            "error": "invalid_message",
-            "message": "Checkpoint message must not be empty.",
-        }
-
     try:
+        validated = CheckpointInput(message=message)
+        message = validated.message
         from datetime import datetime
         from .security import SANDBOX_ROOT
 
@@ -809,6 +857,16 @@ def checkpoint(
             "success": True,
             "path": str(checkpoint_file),
             "message": "Checkpoint recorded successfully.",
+        }
+
+    except ValidationError as exc:
+        return {
+            "success": False,
+            "error": "validation_error",
+            "message": "; ".join(
+                f"{'.'.join(str(part) for part in item['loc'])}: {item['msg']}"
+                for item in exc.errors()
+            ),
         }
 
     except OSError as exc:
