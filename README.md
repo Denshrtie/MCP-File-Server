@@ -189,8 +189,6 @@ The endpoint follows this format:
 
 Replace `YOUR_NGROK_DOMAIN` with the domain configured for the deployment. Remote access uses Basic Authentication, so valid credentials are required.
 
-Authentication credentials must be kept private and must not be included in the README or public repository.
-
 ## 10. Security Measures
 
 The server uses `D:\Midterms` as its approved workspace.
